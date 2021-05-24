@@ -50,4 +50,6 @@ object HelperVariables {
     var builtLocalize: Localize? = null
     lateinit var currentlyRunningLocalize: Future<Void>
 
+
+
 }

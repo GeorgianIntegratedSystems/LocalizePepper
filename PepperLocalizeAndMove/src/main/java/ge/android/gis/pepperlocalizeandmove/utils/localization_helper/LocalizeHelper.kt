@@ -2,6 +2,7 @@ package ge.android.gis.pepperlocalizeandmove.utils.localization_helper
 
 import android.content.Context
 import android.util.Log
+import android.widget.Button
 import android.widget.Toast
 import com.aldebaran.qi.Future
 import com.aldebaran.qi.Promise
@@ -69,7 +70,6 @@ class LocalizeHelper() {
             return@thenCompose it
         }
     }
-
 
 
     fun mapToBitmap(explorationMapView: ExplorationMapView, explorationMap: ExplorationMap) {
@@ -173,7 +173,7 @@ class LocalizeHelper() {
         return HelperVariables.mapping!!.async().mapFrame().value
     }
 
-    fun buildStreamableExplorationMap(explorationMapView: ExplorationMapView): Future<ExplorationMap>? {
+    fun buildStreamableExplorationMapAndLocalizeRobot(explorationMapView: ExplorationMapView): Future<ExplorationMap>? {
 
 
         if (getStreamableMap() == null) {
@@ -203,7 +203,7 @@ class LocalizeHelper() {
                     HelperVariables.initialExplorationMap!!
                 )
 
-
+                startLocalizing(HelperVariables.qiContext!!)
 
             } catch (e: java.lang.Exception) {
 
@@ -218,69 +218,94 @@ class LocalizeHelper() {
                 "buildStreamableExplorationMap: Building map from StreamableBuffer"
             )
             return ExplorationMapBuilder.with(HelperVariables.qiContext).withStreamableBuffer(
-                HelperVariables.streamableExplorationMap).buildAsync()
+                HelperVariables.streamableExplorationMap
+            ).buildAsync()
         }
         return Future.of(HelperVariables.initialExplorationMap)
     }
 
 
-    fun localize(
-        context: Context,
-        qiContext: QiContext,
-        initialExplorationMap: ExplorationMap
-    ) {
+//    fun localize(
+//        qiContext: QiContext,
+//        initialExplorationMap: ExplorationMap
+//    ) {
+//
+//        LocalizeBuilder.with(qiContext).withMap(initialExplorationMap).buildAsync()
+//            .andThenCompose { localize: Localize ->
+//                HelperVariables.builtLocalize = localize
+//                Log.d(TAG, "localize: localize built successfully")
+//
+//                HelperVariables.currentlyRunningLocalize = HelperVariables.builtLocalize!!.async().run()
+//
+//                Log.d(TAG, "localize running...")
+//
+//                HelperVariables.currentlyRunningLocalize
+//
+//            }
+//            .thenConsume { finishedLocalize: Future<Void> ->
+//                HelperVariables.currentlyRunningLocalize.requestCancellation()
+//
+//                if (finishedLocalize.isCancelled) {
+//                    Log.d(TAG, "localize cancelled.")
+//                } else if (finishedLocalize.hasError()) {
+//                    Log.d(TAG, "Failed to localize in map : ", finishedLocalize.error)
+//                    //The error below could happen when trying to run multiple Localize action with the same Localize object (called builtLocalize here).
+//                    if (finishedLocalize.error
+//                            .toString() == "com.aldebaran.qi.QiException: tr1::bad_weak_ptr" || finishedLocalize.error
+//                            .toString() == "com.aldebaran.qi.QiException: Animation failed."
+//                    ) {
+//                        Log.d(TAG, "localize: com.aldebaran.qi.QiException: tr1::bad_weak_ptr")
+//                        HelperVariables.builtLocalize = null
+//                    } else {
+//
+//
+//                        Log.d("awdawdawdawda", "Failed")
+//
+//                    }
+//                }else if (finishedLocalize.isSuccess){
+//                    Log.d(TAG, "localize Success.")
+//
+//                }else {
+//                    Log.d(TAG, "localize finished.")
+//                }
+//
+//
+//            }.andThenConsume {
+//
+//                Log.d("awdawdawdawda", "Success")
+//
+//            }
+//
+//    }
 
-        LocalizeBuilder.with(qiContext).withMap(initialExplorationMap).buildAsync()
-            .andThenCompose { localize: Localize ->
-                HelperVariables.builtLocalize = localize
-                Log.d(TAG, "localize: localize built successfully")
-                Log.d(TAG, "localize: addOnStatusChangedListener")
 
-                HelperVariables.currentlyRunningLocalize = HelperVariables.builtLocalize!!.async().run()
+    fun startLocalizing(qiContext: QiContext) {
+        // Create a Localize action.
+        HelperVariables.builtLocalize = LocalizeBuilder.with(HelperVariables.qiContext)
+            .withMap(HelperVariables.initialExplorationMap)
+            .build()
 
-                Log.d(TAG, "localize running...")
-
-                Log.d(TAG, "Success")
-
-                HelperVariables.currentlyRunningLocalize
+        // Add an on status changed listener on the Localize action to know when the robot is localized in the map.
+        HelperVariables.builtLocalize!!.addOnStatusChangedListener { status ->
+            if (status == LocalizationStatus.LOCALIZED) {
+                Log.i(TAG, "Robot is localized.")
+            }else{
+                Log.i(TAG, "localize failed.")
 
             }
-            .thenConsume { finishedLocalize: Future<Void> ->
-                Log.d(TAG, "localize: removeAllOnStatusChangedListeners")
-                HelperVariables.builtLocalize!!.removeAllOnStatusChangedListeners()
+        }
 
-                HelperVariables.currentlyRunningLocalize.requestCancellation()
+        Log.i(TAG, "Localizing...")
 
-                if (finishedLocalize.isCancelled) {
-                    Log.d(TAG, "localize cancelled.")
-                } else if (finishedLocalize.hasError()) {
-                    Log.d(TAG, "Failed to localize in map : ", finishedLocalize.error)
-                    //The error below could happen when trying to run multiple Localize action with the same Localize object (called builtLocalize here).
-                    if (finishedLocalize.error
-                            .toString() == "com.aldebaran.qi.QiException: tr1::bad_weak_ptr" || finishedLocalize.error
-                            .toString() == "com.aldebaran.qi.QiException: Animation failed."
-                    ) {
-                        Log.d(TAG, "localize: com.aldebaran.qi.QiException: tr1::bad_weak_ptr")
-                        HelperVariables.builtLocalize = null
-                    } else {
+        // Execute the Localize action asynchronously.
+        val localization = HelperVariables.builtLocalize!!.async().run()
 
-                            Toast.makeText(context, "Failed", Toast.LENGTH_SHORT).show()
-
-                            Log.d("awdawdawdawda", "Failed")
-
-                    }
-                } else {
-                    Log.d(TAG, "localize finished.")
-                }
-
-
-            }.andThenConsume {
-
-                    Toast.makeText(context, "Success", Toast.LENGTH_SHORT).show()
-                    Log.d("awdawdawdawda", "Success")
-
-
+        // Add a lambda to the action execution.
+        localization.thenConsume { future ->
+            if (future.hasError()) {
+                Log.e(TAG, "Localize action finished with error.", future.error)
             }
+        }
 
     }
 

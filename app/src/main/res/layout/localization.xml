@@ -120,11 +120,7 @@
             android:layout_height="wrap_content"
             android:text="Load Map" />
 
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/localizeHimself"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Localize Himself"/>
+
 
 
     </LinearLayout>

@@ -128,7 +128,7 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks {
         binding.localizationView.loadMap.setOnClickListener {
 
             showProgress(HelperVariables.qiContext, "Loading map ...")
-            localizeHelper.buildStreamableExplorationMap(binding.localizationView.explorationMapView)!!.andThenConsume {
+            localizeHelper.buildStreamableExplorationMapAndLocalizeRobot(binding.localizationView.explorationMapView)!!.andThenConsume {
                 hideProgress()
             }
 
@@ -158,11 +158,6 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks {
 
         }
 
-        binding.localizationView.localizeHimself.setOnClickListener {
-
-            localizeHelper.localize(this, HelperVariables.qiContext!!, HelperVariables.initialExplorationMap!!)
-
-        }
 
         spinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, ArrayList())
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
@@ -171,6 +166,9 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks {
 
 
     }
+
+
+
 
 
     private fun loadLocations(): Future<Boolean>? {
