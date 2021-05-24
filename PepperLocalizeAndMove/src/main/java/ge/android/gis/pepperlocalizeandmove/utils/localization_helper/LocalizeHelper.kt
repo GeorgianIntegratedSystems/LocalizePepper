@@ -1,5 +1,6 @@
 package ge.android.gis.pepperlocalizeandmove.utils.localization_helper
 
+import android.app.Activity
 import android.content.Context
 import android.util.Log
 import android.widget.Button
@@ -173,7 +174,11 @@ class LocalizeHelper() {
         return HelperVariables.mapping!!.async().mapFrame().value
     }
 
-    fun buildStreamableExplorationMapAndLocalizeRobot(explorationMapView: ExplorationMapView): Future<ExplorationMap>? {
+    fun buildStreamableExplorationMapAndLocalizeRobot(
+        explorationMapView: ExplorationMapView,
+        activity: Activity,
+        context: Context
+    ): Future<ExplorationMap>? {
 
 
         if (getStreamableMap() == null) {
@@ -203,7 +208,7 @@ class LocalizeHelper() {
                     HelperVariables.initialExplorationMap!!
                 )
 
-                startLocalizing(HelperVariables.qiContext!!)
+                startLocalizing(HelperVariables.qiContext!!, activity, context)
 
             } catch (e: java.lang.Exception) {
 
@@ -279,7 +284,7 @@ class LocalizeHelper() {
 //    }
 
 
-    fun startLocalizing(qiContext: QiContext) {
+    fun startLocalizing(qiContext: QiContext, activity: Activity, context: Context) {
         // Create a Localize action.
         HelperVariables.builtLocalize = LocalizeBuilder.with(HelperVariables.qiContext)
             .withMap(HelperVariables.initialExplorationMap)
@@ -288,13 +293,21 @@ class LocalizeHelper() {
         // Add an on status changed listener on the Localize action to know when the robot is localized in the map.
         HelperVariables.builtLocalize!!.addOnStatusChangedListener { status ->
             if (status == LocalizationStatus.LOCALIZED) {
+
+                activity.runOnUiThread {
+                    Toast.makeText(context, "Robot is localized.", Toast.LENGTH_SHORT).show()
+
+                }
                 Log.i(TAG, "Robot is localized.")
-            }else{
-                Log.i(TAG, "localize failed.")
 
             }
         }
 
+
+        activity.runOnUiThread {
+            Toast.makeText(context, "Localizing...", Toast.LENGTH_SHORT).show()
+
+        }
         Log.i(TAG, "Localizing...")
 
         // Execute the Localize action asynchronously.
@@ -303,7 +316,14 @@ class LocalizeHelper() {
         // Add a lambda to the action execution.
         localization.thenConsume { future ->
             if (future.hasError()) {
+
+                activity.runOnUiThread {
+
+                    Toast.makeText(context, "Localize action finished with error.", Toast.LENGTH_SHORT).show()
+                }
                 Log.e(TAG, "Localize action finished with error.", future.error)
+
+
             }
         }
 

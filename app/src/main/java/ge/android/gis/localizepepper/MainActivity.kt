@@ -128,7 +128,7 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks {
         binding.localizationView.loadMap.setOnClickListener {
 
             showProgress(HelperVariables.qiContext, "Loading map ...")
-            localizeHelper.buildStreamableExplorationMapAndLocalizeRobot(binding.localizationView.explorationMapView)!!.andThenConsume {
+            localizeHelper.buildStreamableExplorationMapAndLocalizeRobot(binding.localizationView.explorationMapView, MainActivity(), this)!!.andThenConsume {
                 hideProgress()
             }
 
