@@ -1,0 +1,3 @@
+include ':PepperLocalizeAndMove'
+include ':app'
+rootProject.name = "LocalizePepper"
