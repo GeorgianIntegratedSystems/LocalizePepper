@@ -6,24 +6,22 @@ import com.aldebaran.qi.sdk.QiContext
 import com.aldebaran.qi.sdk.`object`.actuation.Animate
 import com.aldebaran.qi.sdk.`object`.actuation.Animation
 import com.aldebaran.qi.sdk.`object`.holder.AutonomousAbilitiesType
-import com.aldebaran.qi.sdk.`object`.holder.Holder
 import com.aldebaran.qi.sdk.builder.AnimateBuilder
 import com.aldebaran.qi.sdk.builder.AnimationBuilder
 import com.aldebaran.qi.sdk.builder.HolderBuilder
+import ge.android.gis.pepperlocalizeandmove.utils.constants.HelperVariables
 
 class RobotHelper() {
     private var TAG = "ROBOT_HELPER_CLASS"
 
-    private var holder: Holder? = null
 
-    var qiContext: QiContext? = null
 
 
     fun holdAbilities(qiContext: QiContext, withBackgroundMovement: Boolean): Future<Void?>? {
         return releaseAbilities()!!.thenCompose<Void> {
 
             Log.d(TAG, "starting holdAbilities")
-            holder = if (withBackgroundMovement) {
+            HelperVariables.holder = if (withBackgroundMovement) {
                 HolderBuilder.with(qiContext)
                     .withAutonomousAbilities(
                         AutonomousAbilitiesType.BACKGROUND_MOVEMENT,
@@ -37,17 +35,17 @@ class RobotHelper() {
                     )
                     .build()
             }
-            holder!!.async().hold()
+            HelperVariables.holder!!.async().hold()
         }
     }
 
     fun releaseAbilities(): Future<Void?>? {
-        return if (holder != null) {
+        return if (HelperVariables.holder != null) {
 
             Log.d(TAG, "releaseAbilities");
-            holder!!.async().release()
+            HelperVariables.holder!!.async().release()
                 .andThenConsume { _: Void? ->
-                    holder = null
+                    HelperVariables.holder = null
                     Log.d(TAG, "stoped holdAbilities start releaseAbilities")
 
                 }

@@ -9,7 +9,7 @@ import com.aldebaran.qi.sdk.`object`.streamablebuffer.StreamableBuffer
 import com.aldebaran.qi.sdk.`object`.streamablebuffer.StreamableBufferFactory
 import com.aldebaran.qi.sdk.util.copyToStream
 import com.google.gson.Gson
-import ge.android.gis.pepperlocalizeandmove.utils.Constants
+import ge.android.gis.pepperlocalizeandmove.utils.constants.HelperVariables
 import ge.android.gis.pepperlocalizeandmove.utils.localization_helper.LocalizeHelper
 import ge.android.gis.pepperlocalizeandmove.utils.save_in_storage_helper.Vector2theta
 import java.io.*
@@ -193,8 +193,8 @@ class SaveFileClass {
             locationsToBackup[key] = vector
         }
         saveLocationsToFile(
-            Constants.FILE_DIRECTORY_PATH,
-            Constants.LOCATION_FILE_NAME,
+            HelperVariables.FILE_DIRECTORY_PATH,
+            HelperVariables.LOCATION_FILE_NAME,
             locationsToBackup
         )
 
@@ -204,6 +204,7 @@ class SaveFileClass {
 
     fun saveLocation(location: String, savedLocations: MutableMap<String, AttachedFrame>) {
         Log.d(TAG, "saveLocation: Start saving this location")
+        Log.d(TAG, HelperVariables.actuation.toString())
 
         LocalizeHelper().createAttachedFrameFromCurrentPosition()?.andThenConsume {
 

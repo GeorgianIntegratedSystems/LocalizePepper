@@ -7,24 +7,18 @@ import com.aldebaran.qi.sdk.QiContext
 import com.aldebaran.qi.sdk.`object`.actuation.*
 import com.aldebaran.qi.sdk.`object`.geometry.TransformTime
 import com.aldebaran.qi.sdk.`object`.streamablebuffer.StreamableBuffer
+import com.aldebaran.qi.sdk.builder.ExplorationMapBuilder
 import com.aldebaran.qi.sdk.builder.LocalizeAndMapBuilder
 import com.aldebaran.qi.sdk.util.FutureUtils
 import com.softbankrobotics.dx.pepperextras.ui.ExplorationMapView
+import ge.android.gis.pepperlocalizeandmove.utils.constants.HelperVariables
+import ge.android.gis.pepperlocalizeandmove.utils.save_in_storage.SaveFileClass
 import java.util.concurrent.TimeUnit
 
 class LocalizeHelper() {
     private var TAG = "LOCALIZE_HELPER"
 
-    var streamableExplorationMap: StreamableBuffer? = null
 
-    var actuation: Actuation? = null
-    var mapping: Mapping? = null
-
-    var publishExplorationMapFuture: Future<Void>? = null
-
-    var toSaveUpdatedExplorationMap: ExplorationMap? = null
-
-    var initialExplorationMap: ExplorationMap? = null
 
 
     fun mapSurroundings(qiContext: QiContext): Future<ExplorationMap> {
@@ -109,7 +103,7 @@ class LocalizeHelper() {
                 localizeAndMap.addOnStatusChangedListener { status ->
                     if (status == LocalizationStatus.LOCALIZED) {
                         // Start the map notification process.
-                        publishExplorationMapFuture =
+                        HelperVariables.publishExplorationMapFuture =
                             publishExplorationMap(localizeAndMap, updatedMapCallback)
                     }
                 }
@@ -120,7 +114,7 @@ class LocalizeHelper() {
                         // Remove the OnStatusChangedListener.
                         localizeAndMap.removeAllOnStatusChangedListeners()
                         // Stop the map notification process.
-                        publishExplorationMapFuture?.cancel(true)
+                        HelperVariables.publishExplorationMapFuture?.cancel(true)
                         // In case of error, forward it to the Promise.
                         if (it.hasError() && !promise.future.isDone) {
                             promise.setError(it.errorMessage)
@@ -153,18 +147,20 @@ class LocalizeHelper() {
 
 
     fun getStreamableMap(): StreamableBuffer? {
-        return streamableExplorationMap
+        return HelperVariables.streamableExplorationMap
     }
 
     fun setStreamableMap(map: StreamableBuffer) {
-        streamableExplorationMap = map
+        HelperVariables.streamableExplorationMap = map
     }
 
     fun createAttachedFrameFromCurrentPosition(): Future<AttachedFrame>? {
-        return actuation!!.async()
+
+        Log.i(TAG, HelperVariables.actuation.toString())
+        return HelperVariables.actuation!!.async()
             .robotFrame()
             .andThenApply { robotFrame: Frame ->
-                val mapFrame: Frame = mapping!!.async().mapFrame().value;
+                val mapFrame: Frame = HelperVariables.mapping!!.async().mapFrame().value;
 
 
                 val transformTime: TransformTime = robotFrame.computeTransform(mapFrame)
@@ -173,8 +169,57 @@ class LocalizeHelper() {
     }
 
     fun getMapFrame(): Frame? {
-        return mapping!!.async().mapFrame().value
+        return HelperVariables.mapping!!.async().mapFrame().value
     }
 
+    fun buildStreamableExplorationMap(explorationMapView: ExplorationMapView): Future<ExplorationMap>? {
+
+
+        if (getStreamableMap() == null) {
+
+
+            val mapData =
+                SaveFileClass().readStreamableBufferFromFile(
+                    HelperVariables.FILE_DIRECTORY_PATH,
+                    HelperVariables.MAP_FILE_NAME
+                )
+
+
+            setStreamableMap(mapData!!)
+
+        }
+
+        Thread {
+
+            try {
+
+                HelperVariables.initialExplorationMap =
+                    ExplorationMapBuilder.with(HelperVariables.qiContext)
+                        .withStreamableBuffer(HelperVariables.streamableExplorationMap).build()
+
+                mapToBitmap(
+                    explorationMapView,
+                    HelperVariables.initialExplorationMap!!
+                )
+
+
+
+            } catch (e: java.lang.Exception) {
+
+            }
+
+        }.start()
+
+
+        if (HelperVariables.initialExplorationMap == null) {
+            Log.d(
+                "TAG",
+                "buildStreamableExplorationMap: Building map from StreamableBuffer"
+            )
+            return ExplorationMapBuilder.with(HelperVariables.qiContext).withStreamableBuffer(
+                HelperVariables.streamableExplorationMap).buildAsync()
+        }
+        return Future.of(HelperVariables.initialExplorationMap)
+    }
 
 }
