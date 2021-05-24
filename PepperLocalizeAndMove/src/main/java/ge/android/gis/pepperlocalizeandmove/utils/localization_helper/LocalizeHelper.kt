@@ -321,7 +321,6 @@ class LocalizeHelper() {
 
                     Toast.makeText(context, "Localize action finished with error.", Toast.LENGTH_SHORT).show()
                 }
-                Log.e(TAG, "Localize action finished with error.", future.error)
 
 
             }

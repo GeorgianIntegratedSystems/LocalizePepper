@@ -4,12 +4,11 @@ import android.Manifest
 import android.annotation.SuppressLint
 import com.aldebaran.qi.Future
 import com.aldebaran.qi.sdk.QiContext
-import com.aldebaran.qi.sdk.`object`.actuation.Actuation
-import com.aldebaran.qi.sdk.`object`.actuation.ExplorationMap
-import com.aldebaran.qi.sdk.`object`.actuation.Localize
-import com.aldebaran.qi.sdk.`object`.actuation.Mapping
+import com.aldebaran.qi.sdk.`object`.actuation.*
 import com.aldebaran.qi.sdk.`object`.holder.Holder
 import com.aldebaran.qi.sdk.`object`.streamablebuffer.StreamableBuffer
+import com.softbankrobotics.dx.pepperextras.actuation.StubbornGoTo
+import kotlinx.coroutines.Job
 import java.util.concurrent.atomic.AtomicBoolean
 
 object HelperVariables {
@@ -48,8 +47,14 @@ object HelperVariables {
     )
 
     var builtLocalize: Localize? = null
-    lateinit var currentlyRunningLocalize: Future<Void>
 
+    var currentGoToAction: Future<Boolean>? = null
+    var goto: StubbornGoTo? = null
 
+    lateinit var job: Job
+
+    var nextLocation: String? = null
+    var goToRandomFuture: Future<Void>? = null
+    var savedLocations: MutableMap<String, AttachedFrame> = mutableMapOf()
 
 }

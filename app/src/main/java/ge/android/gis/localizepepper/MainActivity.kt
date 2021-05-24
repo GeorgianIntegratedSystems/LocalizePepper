@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.provider.SyncStateContract
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -15,6 +16,7 @@ import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.Lifecycle
+import com.aldebaran.qi.Consumer
 import com.aldebaran.qi.Future
 import com.aldebaran.qi.sdk.QiContext
 import com.aldebaran.qi.sdk.QiSDK
@@ -22,19 +24,28 @@ import com.aldebaran.qi.sdk.RobotLifecycleCallbacks
 import com.aldebaran.qi.sdk.`object`.actuation.AttachedFrame
 import com.aldebaran.qi.sdk.`object`.actuation.ExplorationMap
 import com.aldebaran.qi.sdk.`object`.actuation.Frame
+import com.aldebaran.qi.sdk.`object`.actuation.OrientationPolicy
 import com.aldebaran.qi.sdk.`object`.streamablebuffer.StreamableBuffer
 import com.aldebaran.qi.sdk.design.activity.RobotActivity
 import com.aldebaran.qi.sdk.util.FutureUtils
+import com.softbankrobotics.dx.pepperextras.actuation.StubbornGoToBuilder
 import ge.android.gis.localizepepper.databinding.ActivityMainBinding
 import ge.android.gis.localizepepper.databinding.ProgressBarBinding
 import ge.android.gis.pepperlocalizeandmove.utils.constants.HelperVariables
+import ge.android.gis.pepperlocalizeandmove.utils.constants.HelperVariables.TAG
 import ge.android.gis.pepperlocalizeandmove.utils.localization_helper.LocalizeHelper
+import ge.android.gis.pepperlocalizeandmove.utils.robot_helper.GotoHelper
 import ge.android.gis.pepperlocalizeandmove.utils.robot_helper.RobotHelper
 import ge.android.gis.pepperlocalizeandmove.utils.save_in_storage.SaveFileClass
 import ge.android.gis.pepperlocalizeandmove.utils.save_in_storage_helper.Vector2theta
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.File
 import java.util.*
+import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
+import kotlin.concurrent.thread
 
 class MainActivity : RobotActivity(), RobotLifecycleCallbacks {
 
@@ -48,7 +59,7 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks {
 
     lateinit var spinnerAdapter: ArrayAdapter<String>
     private var selectedLocation: String? = null
-    var savedLocations: MutableMap<String, AttachedFrame> = mutableMapOf()
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,14 +73,14 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks {
         }
 
         binding.localizationView.startMappingButton.setOnClickListener {
-            Log.i(HelperVariables.TAG, "startMappingStep clicked")
+            Log.i(TAG, "startMappingStep clicked")
 
             val qiContext = HelperVariables.qiContext ?: return@setOnClickListener
             startMappingStep(qiContext)
         }
 
         binding.localizationView.extendMapButton.setOnClickListener {
-            Log.i(HelperVariables.TAG, "extendMapButton clicked")
+            Log.i(TAG, "extendMapButton clicked")
             // Check that an initial map is available.
             val initialExplorationMap = HelperVariables.initialExplorationMap
             if (initialExplorationMap != null) {
@@ -116,9 +127,9 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks {
         binding.localizationView.saveButton.setOnClickListener {
             val location: String = binding.localizationView.addItemEdit.text.toString()
             // Save location only if new.
-            if (location.isNotEmpty() && !savedLocations.containsKey(location)) {
+            if (location.isNotEmpty() && !HelperVariables.savedLocations.containsKey(location)) {
                 spinnerAdapter.add(location)
-                saveInStorage.saveLocation(location, savedLocations)
+                saveInStorage.saveLocation(location, HelperVariables.savedLocations)
                 binding.localizationView.addItemEdit.text.clear()
             } else {
                 Toast.makeText(this, "Enter the location name", Toast.LENGTH_LONG).show()
@@ -158,6 +169,22 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks {
 
         }
 
+        binding.localizationView.goToRandom.setOnClickListener {
+            if (HelperVariables.savedLocations.isNotEmpty()) {
+
+
+                GotoHelper().goToRandomLocation(true)
+
+            } else {
+                runOnUiThread {
+                    Toast.makeText(this, "Location is empty", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        binding.localizationView.gotoButton.setOnClickListener {
+            GotoHelper().checkAndCancelCurrentGoto()
+        }
 
         spinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, ArrayList())
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
@@ -166,7 +193,6 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks {
 
 
     }
-
 
 
 
@@ -184,7 +210,7 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks {
                     )
 
                 // Clear current savedLocations.
-                savedLocations = TreeMap()
+                HelperVariables.savedLocations = TreeMap()
                 val mapFrame: Frame? = localizeHelper.getMapFrame()
 
 
@@ -204,7 +230,7 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks {
                         mapFrame!!.async().makeAttachedFrame(t).value
 
                     // Store the FreeFrame.
-                    savedLocations[key1!!] = attachedFrame
+                    HelperVariables.savedLocations[key1!!] = attachedFrame
 
                 }
 
@@ -212,7 +238,7 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks {
 
 
                 Log.d("TAG", "loadLocations: Done")
-                Log.d("TAG", savedLocations.toString())
+                Log.d("TAG", HelperVariables.savedLocations.toString())
                 if (HelperVariables.loadLocationSuccess.get()) return@futureOf Future.of(
                     true
                 ) else throw Exception("Empty file")
