@@ -5,6 +5,7 @@ import com.aldebaran.qi.Future
 import com.aldebaran.qi.Promise
 import com.aldebaran.qi.sdk.QiContext
 import com.aldebaran.qi.sdk.`object`.actuation.*
+import com.aldebaran.qi.sdk.`object`.geometry.TransformTime
 import com.aldebaran.qi.sdk.`object`.streamablebuffer.StreamableBuffer
 import com.aldebaran.qi.sdk.builder.LocalizeAndMapBuilder
 import com.aldebaran.qi.sdk.util.FutureUtils
@@ -149,5 +150,31 @@ class LocalizeHelper() {
             publishExplorationMap(localizeAndMap, updatedMapCallback)
         }
     }
+
+
+    fun getStreamableMap(): StreamableBuffer? {
+        return streamableExplorationMap
+    }
+
+    fun setStreamableMap(map: StreamableBuffer) {
+        streamableExplorationMap = map
+    }
+
+    fun createAttachedFrameFromCurrentPosition(): Future<AttachedFrame>? {
+        return actuation!!.async()
+            .robotFrame()
+            .andThenApply { robotFrame: Frame ->
+                val mapFrame: Frame = mapping!!.async().mapFrame().value;
+
+
+                val transformTime: TransformTime = robotFrame.computeTransform(mapFrame)
+                mapFrame.makeAttachedFrame(transformTime.transform)
+            }
+    }
+
+    fun getMapFrame(): Frame? {
+        return mapping!!.async().mapFrame().value
+    }
+
 
 }

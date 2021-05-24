@@ -15,11 +15,13 @@ import com.aldebaran.qi.sdk.QiContext
 import com.aldebaran.qi.sdk.QiSDK
 import com.aldebaran.qi.sdk.RobotLifecycleCallbacks
 import com.aldebaran.qi.sdk.`object`.actuation.ExplorationMap
+import com.aldebaran.qi.sdk.`object`.streamablebuffer.StreamableBuffer
 import com.aldebaran.qi.sdk.design.activity.RobotActivity
 import ge.android.gis.localizepepper.databinding.ActivityMainBinding
 import ge.android.gis.localizepepper.databinding.ProgressBarBinding
 import ge.android.gis.pepperlocalizeandmove.utils.localization_helper.LocalizeHelper
 import ge.android.gis.pepperlocalizeandmove.utils.robot_helper.RobotHelper
+import ge.android.gis.pepperlocalizeandmove.utils.save_in_storage.SaveFileClass
 
 class MainActivity : RobotActivity(), RobotLifecycleCallbacks {
 
@@ -29,6 +31,7 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks {
 
     var robotHelper: RobotHelper = RobotHelper()
     var localizeHelper: LocalizeHelper = LocalizeHelper()
+    var saveInStorage: SaveFileClass = SaveFileClass()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,8 +67,34 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks {
         }
 
 
-    }
+        binding.localizationView.stopLocalization.setOnClickListener {
 
+            robotHelper.releaseAbilities()
+
+            showProgress(this, "Saving Map ...")
+
+            localizeHelper.publishExplorationMapFuture!!.cancel(true)
+
+            Thread {
+
+                localizeHelper.setStreamableMap(localizeHelper.toSaveUpdatedExplorationMap!!.serializeAsStreamableBuffer())
+
+                val mapData: StreamableBuffer? = localizeHelper.getStreamableMap()
+                saveInStorage.writeStreamableBufferToFile(
+                        Constants.FILE_DIRECTORY_PATH,
+                        Constants.MAP_FILE_NAME,
+                        mapData!!
+                )
+
+                runOnUiThread {
+                    hideProgress()
+                }
+
+            }.start()
+
+        }
+
+    }
 
     private fun startMapExtensionStep(initialExplorationMap: ExplorationMap, qiContext: QiContext) {
         Log.i(Constants.TAG, "StartMapEXTENSION Class")

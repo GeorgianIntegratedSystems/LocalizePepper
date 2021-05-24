@@ -41,7 +41,7 @@ class RobotHelper() {
         }
     }
 
-    private fun releaseAbilities(): Future<Void?>? {
+    fun releaseAbilities(): Future<Void?>? {
         return if (holder != null) {
 
             Log.d(TAG, "releaseAbilities");
