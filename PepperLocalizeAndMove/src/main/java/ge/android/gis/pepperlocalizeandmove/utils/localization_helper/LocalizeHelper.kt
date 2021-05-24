@@ -1,6 +1,8 @@
 package ge.android.gis.pepperlocalizeandmove.utils.localization_helper
 
+import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import com.aldebaran.qi.Future
 import com.aldebaran.qi.Promise
 import com.aldebaran.qi.sdk.QiContext
@@ -9,6 +11,7 @@ import com.aldebaran.qi.sdk.`object`.geometry.TransformTime
 import com.aldebaran.qi.sdk.`object`.streamablebuffer.StreamableBuffer
 import com.aldebaran.qi.sdk.builder.ExplorationMapBuilder
 import com.aldebaran.qi.sdk.builder.LocalizeAndMapBuilder
+import com.aldebaran.qi.sdk.builder.LocalizeBuilder
 import com.aldebaran.qi.sdk.util.FutureUtils
 import com.softbankrobotics.dx.pepperextras.ui.ExplorationMapView
 import ge.android.gis.pepperlocalizeandmove.utils.constants.HelperVariables
@@ -17,9 +20,6 @@ import java.util.concurrent.TimeUnit
 
 class LocalizeHelper() {
     private var TAG = "LOCALIZE_HELPER"
-
-
-
 
     fun mapSurroundings(qiContext: QiContext): Future<ExplorationMap> {
         // Create a Promise to set the operation state later.
@@ -102,6 +102,7 @@ class LocalizeHelper() {
                 // Add an OnStatusChangedListener to know when the robot is localized.
                 localizeAndMap.addOnStatusChangedListener { status ->
                     if (status == LocalizationStatus.LOCALIZED) {
+                        Log.i(TAG, LocalizationStatus.LOCALIZED.toString())
                         // Start the map notification process.
                         HelperVariables.publishExplorationMapFuture =
                             publishExplorationMap(localizeAndMap, updatedMapCallback)
@@ -220,6 +221,67 @@ class LocalizeHelper() {
                 HelperVariables.streamableExplorationMap).buildAsync()
         }
         return Future.of(HelperVariables.initialExplorationMap)
+    }
+
+
+    fun localize(
+        context: Context,
+        qiContext: QiContext,
+        initialExplorationMap: ExplorationMap
+    ) {
+
+        LocalizeBuilder.with(qiContext).withMap(initialExplorationMap).buildAsync()
+            .andThenCompose { localize: Localize ->
+                HelperVariables.builtLocalize = localize
+                Log.d(TAG, "localize: localize built successfully")
+                Log.d(TAG, "localize: addOnStatusChangedListener")
+
+                HelperVariables.currentlyRunningLocalize = HelperVariables.builtLocalize!!.async().run()
+
+                Log.d(TAG, "localize running...")
+
+                Log.d(TAG, "Success")
+
+                HelperVariables.currentlyRunningLocalize
+
+            }
+            .thenConsume { finishedLocalize: Future<Void> ->
+                Log.d(TAG, "localize: removeAllOnStatusChangedListeners")
+                HelperVariables.builtLocalize!!.removeAllOnStatusChangedListeners()
+
+                HelperVariables.currentlyRunningLocalize.requestCancellation()
+
+                if (finishedLocalize.isCancelled) {
+                    Log.d(TAG, "localize cancelled.")
+                } else if (finishedLocalize.hasError()) {
+                    Log.d(TAG, "Failed to localize in map : ", finishedLocalize.error)
+                    //The error below could happen when trying to run multiple Localize action with the same Localize object (called builtLocalize here).
+                    if (finishedLocalize.error
+                            .toString() == "com.aldebaran.qi.QiException: tr1::bad_weak_ptr" || finishedLocalize.error
+                            .toString() == "com.aldebaran.qi.QiException: Animation failed."
+                    ) {
+                        Log.d(TAG, "localize: com.aldebaran.qi.QiException: tr1::bad_weak_ptr")
+                        HelperVariables.builtLocalize = null
+                    } else {
+
+                            Toast.makeText(context, "Failed", Toast.LENGTH_SHORT).show()
+
+                            Log.d("awdawdawdawda", "Failed")
+
+                    }
+                } else {
+                    Log.d(TAG, "localize finished.")
+                }
+
+
+            }.andThenConsume {
+
+                    Toast.makeText(context, "Success", Toast.LENGTH_SHORT).show()
+                    Log.d("awdawdawdawda", "Success")
+
+
+            }
+
     }
 
 }

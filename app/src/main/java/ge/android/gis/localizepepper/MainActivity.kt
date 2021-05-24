@@ -158,6 +158,12 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks {
 
         }
 
+        binding.localizationView.localizeHimself.setOnClickListener {
+
+            localizeHelper.localize(this, HelperVariables.qiContext!!, HelperVariables.initialExplorationMap!!)
+
+        }
+
         spinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, ArrayList())
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         binding.localizationView.spinner.adapter = spinnerAdapter

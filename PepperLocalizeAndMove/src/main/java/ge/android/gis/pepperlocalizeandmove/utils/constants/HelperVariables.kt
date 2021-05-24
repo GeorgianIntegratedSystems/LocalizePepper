@@ -2,13 +2,11 @@ package ge.android.gis.pepperlocalizeandmove.utils.constants
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Context
-import android.content.pm.PackageManager
-import androidx.core.app.ActivityCompat
 import com.aldebaran.qi.Future
 import com.aldebaran.qi.sdk.QiContext
 import com.aldebaran.qi.sdk.`object`.actuation.Actuation
 import com.aldebaran.qi.sdk.`object`.actuation.ExplorationMap
+import com.aldebaran.qi.sdk.`object`.actuation.Localize
 import com.aldebaran.qi.sdk.`object`.actuation.Mapping
 import com.aldebaran.qi.sdk.`object`.holder.Holder
 import com.aldebaran.qi.sdk.`object`.streamablebuffer.StreamableBuffer
@@ -48,5 +46,8 @@ object HelperVariables {
         Manifest.permission.WRITE_EXTERNAL_STORAGE,
         Manifest.permission.READ_EXTERNAL_STORAGE
     )
+
+    var builtLocalize: Localize? = null
+    lateinit var currentlyRunningLocalize: Future<Void>
 
 }
