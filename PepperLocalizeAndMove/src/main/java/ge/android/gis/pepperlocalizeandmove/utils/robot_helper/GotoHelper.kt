@@ -1,6 +1,5 @@
 package ge.android.gis.pepperlocalizeandmove.utils.robot_helper
 
-import android.provider.SyncStateContract
 import android.util.Log
 import com.aldebaran.qi.Future
 import com.aldebaran.qi.sdk.`object`.actuation.AttachedFrame
@@ -18,16 +17,14 @@ import kotlin.concurrent.thread
 
 class GotoHelper {
 
-    fun goToRandomLocation(setGoToRandom: Boolean) {
+    fun goToRandomLocation(setGoToRandom: Boolean, delay: Long) {
 
         if (setGoToRandom) {
-            HelperVariables.goToRandomFuture = FutureUtils.wait(40, TimeUnit.SECONDS)
+            HelperVariables.goToRandomFuture = FutureUtils.wait(delay, TimeUnit.SECONDS)
                 .andThenConsume {
                     Log.d(HelperVariables.TAG, "PEPPER GOTO RANDOM LOCATION STARTED ")
                     HelperVariables.job.cancel()
-                    goToRandomLocation(
-                        setGoToRandom
-                    )
+                    goToRandomLocation(setGoToRandom, 40)
                 }
 
 
@@ -56,26 +53,28 @@ class GotoHelper {
             }
         }
     }
-    private fun goToLocation(location: String) {
 
-        Log.d(HelperVariables.TAG, " PEPPER STARTED GOING ON THIS LOCATION $location ")
+    fun goToLocation(location: String) {
 
 
-        val freeFrame: AttachedFrame? = HelperVariables.savedLocations[location]
-        val frameFuture: Frame = freeFrame!!.frame()
+            Log.d(HelperVariables.TAG, " PEPPER STARTED GOING ON THIS LOCATION $location ")
 
-        HelperVariables.job = CoroutineScope(Dispatchers.IO).launch {
 
-            HelperVariables.goto = StubbornGoToBuilder.with(HelperVariables.qiContext!!)
-                .withFinalOrientationPolicy(OrientationPolicy.ALIGN_X)
-                .withMaxRetry(10)
-                .withMaxSpeed(0.25f)
-                .withMaxDistanceFromTargetFrame(0.3)
-                .withWalkingAnimationEnabled(true)
-                .withFrame(frameFuture).build()
-            HelperVariables.currentGoToAction = HelperVariables.goto!!.async().run()
+            val freeFrame: AttachedFrame? = HelperVariables.savedLocations[location]
+            val frameFuture: Frame = freeFrame!!.frame()
 
-        }
+            HelperVariables.job = CoroutineScope(Dispatchers.IO).launch {
+
+                HelperVariables.goto = StubbornGoToBuilder.with(HelperVariables.qiContext!!)
+                    .withFinalOrientationPolicy(OrientationPolicy.ALIGN_X)
+                    .withMaxRetry(10)
+                    .withMaxSpeed(0.25f)
+                    .withMaxDistanceFromTargetFrame(0.3)
+                    .withWalkingAnimationEnabled(true)
+                    .withFrame(frameFuture).build()
+                HelperVariables.currentGoToAction = HelperVariables.goto!!.async().run()
+            }
+
 
 //        waitForInstructions()
     }
@@ -90,7 +89,7 @@ class GotoHelper {
     private fun pickRandomLocation(): String {
 
 
-        val keysAsArray: MutableList<String> = java.util.ArrayList(HelperVariables.savedLocations.keys)
+        val keysAsArray: MutableList<String> = ArrayList(HelperVariables.savedLocations.keys)
         val r = Random()
         val location = keysAsArray[r.nextInt(keysAsArray.size)]
         return if (location != HelperVariables.nextLocation) {
@@ -106,9 +105,10 @@ class GotoHelper {
 
         HelperVariables.job.cancel()
 
+        goToRandomLocation(false, 40)
         HelperVariables.currentGoToAction!!.requestCancellation()
 
-        Log.d(HelperVariables.TAG, "PEPPER CHECK AND CANCEL GOTO  " )
+        Log.d(HelperVariables.TAG, "PEPPER CHECK AND CANCEL GOTO  ")
 
         return HelperVariables.currentGoToAction
     }

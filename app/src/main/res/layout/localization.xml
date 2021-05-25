@@ -38,6 +38,14 @@
             android:text="Go To Random">
 
         </androidx.appcompat.widget.AppCompatButton>
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/stopGoing"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="Stop going">
+
+        </androidx.appcompat.widget.AppCompatButton>
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/stopLocalization"
             android:layout_width="fill_parent"

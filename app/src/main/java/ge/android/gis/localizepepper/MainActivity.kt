@@ -6,7 +6,6 @@ import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
-import android.provider.SyncStateContract
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -16,19 +15,15 @@ import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.Lifecycle
-import com.aldebaran.qi.Consumer
 import com.aldebaran.qi.Future
 import com.aldebaran.qi.sdk.QiContext
 import com.aldebaran.qi.sdk.QiSDK
 import com.aldebaran.qi.sdk.RobotLifecycleCallbacks
-import com.aldebaran.qi.sdk.`object`.actuation.AttachedFrame
 import com.aldebaran.qi.sdk.`object`.actuation.ExplorationMap
 import com.aldebaran.qi.sdk.`object`.actuation.Frame
-import com.aldebaran.qi.sdk.`object`.actuation.OrientationPolicy
 import com.aldebaran.qi.sdk.`object`.streamablebuffer.StreamableBuffer
 import com.aldebaran.qi.sdk.design.activity.RobotActivity
 import com.aldebaran.qi.sdk.util.FutureUtils
-import com.softbankrobotics.dx.pepperextras.actuation.StubbornGoToBuilder
 import ge.android.gis.localizepepper.databinding.ActivityMainBinding
 import ge.android.gis.localizepepper.databinding.ProgressBarBinding
 import ge.android.gis.pepperlocalizeandmove.utils.constants.HelperVariables
@@ -38,14 +33,10 @@ import ge.android.gis.pepperlocalizeandmove.utils.robot_helper.GotoHelper
 import ge.android.gis.pepperlocalizeandmove.utils.robot_helper.RobotHelper
 import ge.android.gis.pepperlocalizeandmove.utils.save_in_storage.SaveFileClass
 import ge.android.gis.pepperlocalizeandmove.utils.save_in_storage_helper.Vector2theta
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.io.File
 import java.util.*
-import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
-import kotlin.concurrent.thread
+
 
 class MainActivity : RobotActivity(), RobotLifecycleCallbacks {
 
@@ -154,12 +145,12 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks {
                     id: Long
                 ) {
                     selectedLocation = parent.getItemAtPosition(position) as String
-                    Log.i(HelperVariables.TAG, "onItemSelected: $selectedLocation")
+                    Log.i(TAG, "onItemSelected: $selectedLocation")
                 }
 
                 override fun onNothingSelected(parent: AdapterView<*>) {
                     selectedLocation = null
-                    Log.i(HelperVariables.TAG, "onNothingSelected")
+                    Log.i(TAG, "onNothingSelected")
                 }
             }
 
@@ -173,7 +164,7 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks {
             if (HelperVariables.savedLocations.isNotEmpty()) {
 
 
-                GotoHelper().goToRandomLocation(true)
+                GotoHelper().goToRandomLocation(true, 40)
 
             } else {
                 runOnUiThread {
@@ -182,7 +173,17 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks {
             }
         }
 
-        binding.localizationView.gotoButton.setOnClickListener {
+//        binding.localizationView.gotoButton.setOnClickListener {
+//            if (!selectedLocation.isNullOrEmpty()){
+//
+//            GotoHelper().goToLocation(selectedLocation!!)
+//
+//            }else{
+//                Toast.makeText(this, "please first select location", Toast.LENGTH_SHORT).show()
+//            }
+//        }
+
+        binding.localizationView.stopGoing.setOnClickListener {
             GotoHelper().checkAndCancelCurrentGoto()
         }
 

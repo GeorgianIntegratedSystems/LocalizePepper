@@ -230,60 +230,6 @@ class LocalizeHelper() {
     }
 
 
-//    fun localize(
-//        qiContext: QiContext,
-//        initialExplorationMap: ExplorationMap
-//    ) {
-//
-//        LocalizeBuilder.with(qiContext).withMap(initialExplorationMap).buildAsync()
-//            .andThenCompose { localize: Localize ->
-//                HelperVariables.builtLocalize = localize
-//                Log.d(TAG, "localize: localize built successfully")
-//
-//                HelperVariables.currentlyRunningLocalize = HelperVariables.builtLocalize!!.async().run()
-//
-//                Log.d(TAG, "localize running...")
-//
-//                HelperVariables.currentlyRunningLocalize
-//
-//            }
-//            .thenConsume { finishedLocalize: Future<Void> ->
-//                HelperVariables.currentlyRunningLocalize.requestCancellation()
-//
-//                if (finishedLocalize.isCancelled) {
-//                    Log.d(TAG, "localize cancelled.")
-//                } else if (finishedLocalize.hasError()) {
-//                    Log.d(TAG, "Failed to localize in map : ", finishedLocalize.error)
-//                    //The error below could happen when trying to run multiple Localize action with the same Localize object (called builtLocalize here).
-//                    if (finishedLocalize.error
-//                            .toString() == "com.aldebaran.qi.QiException: tr1::bad_weak_ptr" || finishedLocalize.error
-//                            .toString() == "com.aldebaran.qi.QiException: Animation failed."
-//                    ) {
-//                        Log.d(TAG, "localize: com.aldebaran.qi.QiException: tr1::bad_weak_ptr")
-//                        HelperVariables.builtLocalize = null
-//                    } else {
-//
-//
-//                        Log.d("awdawdawdawda", "Failed")
-//
-//                    }
-//                }else if (finishedLocalize.isSuccess){
-//                    Log.d(TAG, "localize Success.")
-//
-//                }else {
-//                    Log.d(TAG, "localize finished.")
-//                }
-//
-//
-//            }.andThenConsume {
-//
-//                Log.d("awdawdawdawda", "Success")
-//
-//            }
-//
-//    }
-
-
     fun startLocalizing(qiContext: QiContext, activity: Activity, context: Context) {
         // Create a Localize action.
         HelperVariables.builtLocalize = LocalizeBuilder.with(HelperVariables.qiContext)
