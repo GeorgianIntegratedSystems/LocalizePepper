@@ -51,11 +51,20 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks {
 ### **Add this in your Manifest file**
 
 
-><uses-permission android:name="android.permission.INTERNET" />
 
-><uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
-><uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+ ``` kotlin
+
+<uses-permission android:name="android.permission.INTERNET" />
+
+<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
+<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    }
+
+ ```
+ 
+ 
 ### Request Permissions
 
  ``` kotlin
