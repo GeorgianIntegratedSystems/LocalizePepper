@@ -1,7 +1,3 @@
-## Typographic replacements
-
-This library is used for pepper localization and moves.
-
 # Add the library as a dependency
 You can use Jitpack (https://jitpack.io/) to add the library as a gradle dependency.
 
@@ -55,9 +51,9 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks {
 ### Add this in your Manifest file
 
 
-+ <uses-permission android:name="android.permission.INTERNET" />
-+ <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-+ <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
++ **<uses-permission android:name="android.permission.INTERNET" />**
++ **<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />**
++ **<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />**
 
 ### Request Permissions
 
